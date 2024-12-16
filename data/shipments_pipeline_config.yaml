@@ -1,0 +1,68 @@
+Deployment:
+  namespace: kubeflow
+  prometheusURL: 'http://localhost:9090'
+stages:
+  - name: filter_data
+    type: filtering
+    parameter:
+      operation: 'greater_than'
+      column_name: 'week'
+      threshold: 3
+
+  - name: anonymize_columns
+    type: anonymization
+    parameter:
+      columns_to_anonymize:
+        - 'customer_name'
+
+
+  - name: aggregate_data
+    type: aggregation
+    parameter:
+      groupby_column: 'customer_id'
+      columns_to_aggregate: ['item_id']
+      aggregation_functions:
+        item_id: ['count']
+
+  - name: compress_json_to_output
+    type: compress_json_to_gzip
+    parameter:
+      output_file: './data/compressed_data.json.gz'
+
+  - name: compress_csv_output
+    type: compress_csv_to_gzip
+    parameter:
+      output_file: './data/compressed_data.csv.gz'
+
+pipelines:
+  - name: shipments_anonymize_data_pipelines
+    flow:
+      - filter_data
+      - anonymize_columns
+      - aggregate_data
+      - compress_json_to_output
+    datasource:
+      type: csv
+      metadata: ./data/sample-new.csv
+    consumers:
+      - u1
+  - name: shipments_data_pipelines
+    flow:
+      - filter_data
+      - aggregate_data
+      - compress_json_to_output
+    datasource:
+      type: csv
+      metadata: ./data/sample-new.csv
+    consumers:
+      - u2
+
+pipelineChains:
+
+  - name: shipments_anonymize_chain
+    flow:
+      - shipments_anonymize_data_pipelines
+
+  - name: shipments_data_chain
+    flow:
+      - shipments_data_pipelines

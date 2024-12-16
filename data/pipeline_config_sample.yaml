@@ -1,0 +1,69 @@
+Deployment:
+  namespace: kubeflow
+  prometheusURL: 'http://localhost:9090'
+stages:
+  - name: filter_data
+    type: filtering
+    parameter:
+      operation: 'greater_than'
+      column_name: 'age'
+      threshold: 30
+
+  - name: anonymize_columns
+    type: anonymization
+    parameter:
+      columns_to_anonymize:
+        - 'name'
+        - 'email'
+
+  - name: aggregate_data
+    type: aggregation
+    parameter:
+      groupby_column: 'age'
+      columns_to_aggregate: ['salary', 'age']
+      aggregation_functions:
+        salary: ['mean', 'sum']
+        age: ['mean']
+
+  - name: compress_json_to_output
+    type: compress_json_to_gzip
+    parameter:
+      output_file: './data/compressed_data.json.gz'
+
+  - name: compress_csv_output
+    type: compress_csv_to_gzip
+    parameter:
+      output_file: './data/compressed_data.csv.gz'
+
+pipelines:
+  - name: employee_data_pipeline
+    flow:
+      - filter_data
+      - anonymize_columns
+      - aggregate_data
+      - compress_json_to_output
+    datasource:
+      type: csv
+      metadata: ./data/sample-new.csv
+    consumers:
+      - u1
+  - name: sales_data_pipeline
+    flow:
+      - filter_data
+      - aggregate_data
+      - compress_json_to_output
+    datasource:
+      type: csv
+      metadata: ./data/sample-new.csv
+    consumers:
+      - u2
+
+pipelineChains:
+
+  - name: employee_pipeline_chain
+    flow:
+      - employee_data_pipeline
+
+  - name: sales_pipeline_chain
+    flow:
+      - sales_data_pipeline

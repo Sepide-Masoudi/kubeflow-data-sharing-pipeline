@@ -1,0 +1,278 @@
+# PIPELINE DEFINITION
+# Name: chain-sales-pipeline-chain
+# Description: Pipeline chain generated from config: sales_pipeline_chain
+components:
+  comp-aggregate-columns:
+    executorLabel: exec-aggregate-columns
+    inputDefinitions:
+      artifacts:
+        input_json:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+      parameters:
+        aggregation_functions:
+          parameterType: STRUCT
+        columns_to_aggregate:
+          parameterType: LIST
+        groupby_column:
+          parameterType: STRING
+    outputDefinitions:
+      artifacts:
+        output_json:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+  comp-compress-json-to-gzip:
+    executorLabel: exec-compress-json-to-gzip
+    inputDefinitions:
+      artifacts:
+        input_json:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+    outputDefinitions:
+      artifacts:
+        output_json:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+  comp-filtering:
+    executorLabel: exec-filtering
+    inputDefinitions:
+      parameters:
+        column_name:
+          parameterType: STRING
+        data_path:
+          parameterType: STRING
+        operation:
+          parameterType: STRING
+        threshold:
+          parameterType: NUMBER_INTEGER
+    outputDefinitions:
+      artifacts:
+        output_json:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+deploymentSpec:
+  executors:
+    exec-aggregate-columns:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - aggregate_columns
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.9.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&\
+          \  python3 -m pip install --quiet --no-warn-script-location 'pandas' 'typing'\
+          \ && \"$0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef aggregate_columns(\n    groupby_column: str, \n    columns_to_aggregate:\
+          \ list,  # list[str]\n    aggregation_functions: dict,  # dict[str, list[str]],\
+          \ \n    input_json: dsl.Input[Dataset],\n    output_json: dsl.Output[Dataset]\n\
+          ):\n    import pandas as pd  \n    import json\n\n    #data_df = pd.read_csv(data_path)\n\
+          \    with open(input_json.path, 'r') as f:\n        data = json.load(f)\
+          \ \n    # Check if data is a list of dictionaries\n    if isinstance(data,\
+          \ list):\n        data_df = pd.DataFrame(data)\n    elif isinstance(data,\
+          \ dict):\n        data_df = pd.DataFrame.from_dict(data)\n    else:\n  \
+          \      raise ValueError(\"Data is not in a valid format for DataFrame.\"\
+          )\n\n    try:\n        # Perform the aggregation\n        aggregated_data\
+          \ = data_df.groupby(groupby_column).agg(aggregation_functions)\n       \
+          \  # Flatten multi-index columns if they exist\n        if isinstance(aggregated_data.columns,\
+          \ pd.MultiIndex):\n            aggregated_data.columns = ['_'.join(col).strip()\
+          \ for col in aggregated_data.columns.values]\n\n        # Select only the\
+          \ required columns to aggregate\n        #aggregated_data = aggregated_data[columns_to_aggregate]\n\
+          \        # Check if all columns to aggregate are in the result, then select\
+          \ them\n        available_columns = [col for col in columns_to_aggregate\
+          \ if col in aggregated_data.columns]\n        aggregated_data = aggregated_data[available_columns]\n\
+          \        aggregated_data.reset_index(inplace=True)\n        # Save the result\
+          \ to the output path\n        #aggregated_data.to_csv(data_path, index=False)\n\
+          \        print(f\"Aggregated data has been written to {aggregated_data.to_dict(orient='records')}\"\
+          )\n        with open(output_json.path, 'w') as f:\n            json.dump(aggregated_data.to_dict(orient='records'),\
+          \ f)          \n    except KeyError as e:\n        raise f\"Error: Column\
+          \ {e} not found in the data.\"\n    except Exception as e:\n        raise\
+          \ f\"An error occurred: {e}\"\n\n"
+        image: python:3.12.2
+    exec-compress-json-to-gzip:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - compress_json_to_gzip
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.9.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&\
+          \  python3 -m pip install --quiet --no-warn-script-location 'pandas' &&\
+          \ \"$0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef compress_json_to_gzip(\n    input_json: dsl.Input[Dataset],\n\
+          \    output_json: dsl.Output[Dataset]\n):\n    import json\n    import gzip\n\
+          \n    # Read JSON data from input file\n    with open(input_json.path, 'r')\
+          \ as f:\n        data = json.load(f)\n\n    try:\n        # Convert data\
+          \ to JSON string\n        json_data = json.dumps(data)\n\n        # Compress\
+          \ and write to GZIP file\n        with gzip.open(output_json.path, 'wt',\
+          \ encoding='utf-8') as f:\n            f.write(json_data)\n    except Exception\
+          \ as e:\n        print(f\"An error occurred: {e}\")\n        # Optionally\
+          \ save an empty file in case of failure\n        with open(output_json.path,\
+          \ 'w') as f:\n            f.write('')\n\n"
+        image: python:3.12.2
+    exec-filtering:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - filtering
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.9.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&\
+          \  python3 -m pip install --quiet --no-warn-script-location 'pandas' 'requests'\
+          \ && \"$0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef filtering(data_path:str, operation: str, column_name: str, threshold:\
+          \ int, output_json: dsl.Output[Dataset]):\n\n    import pandas as pd \n\
+          \    import requests\n    import json\n\n    def compare_rows(data: pd.DataFrame,\
+          \ column_name: str, threshold: int, operation: str) -> pd.DataFrame:\n \
+          \       if operation == 'greater_than':\n            return data[data[column_name]\
+          \ > threshold]\n        elif operation == 'less_than':\n            return\
+          \ data[data[column_name] < threshold]\n        elif operation == 'equal_to':\n\
+          \            return data[data[column_name] == threshold]\n        else:\n\
+          \            raise ValueError(\"Unsupported operation\")\n\n\n    try:\n\
+          \n        #data =pd.read_csv(data_path)\n        response = requests.get(data_path)\n\
+          \        if response.status_code == 200:\n            data_json = response.json()\
+          \  # Parse the JSON data from the response\n            data = pd.DataFrame(data_json)\
+          \  # Create a DataFrame from the JSON data\n        else:\n            raise\
+          \ ValueError(f\"problem in rendering the URL response from path '{data_path}'\"\
+          )  \n\n        if column_name not in data.columns:\n            raise ValueError(f\"\
+          Column '{column_name}' does not exist in the DataFrame.\")  \n\n       \
+          \ filtered_data=compare_rows(data, column_name, threshold, operation)\n\
+          \        if filtered_data.empty:\n            print(\"filtered dat was Empty\
+          \ !!!\")\n\n        with open(output_json.path, 'w') as f:\n           \
+          \ json.dump(filtered_data.to_dict(orient='records'), f)  \n\n        #filtered_data.to_csv(data_path,\
+          \ index=False)\n        print(f\"Filtered data has been written to {data_path}\"\
+          )\n    except FileNotFoundError:\n        print(f\"Error: File '{data_path}'\
+          \ not found.\")\n    except Exception as e:\n        print(f\"An error occurred:\
+          \ {e}\")\n\n"
+        image: python:3.12.2
+pipelineInfo:
+  description: 'Pipeline chain generated from config: sales_pipeline_chain'
+  name: chain-sales-pipeline-chain
+root:
+  dag:
+    tasks:
+      aggregate-columns:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-aggregate-columns
+        dependentTasks:
+        - filtering
+        inputs:
+          artifacts:
+            input_json:
+              taskOutputArtifact:
+                outputArtifactKey: output_json
+                producerTask: filtering
+          parameters:
+            aggregation_functions:
+              runtimeValue:
+                constant:
+                  age:
+                  - mean
+                  salary:
+                  - mean
+                  - sum
+            columns_to_aggregate:
+              runtimeValue:
+                constant:
+                - salary
+                - age
+            groupby_column:
+              runtimeValue:
+                constant: age
+        taskInfo:
+          name: aggregate-columns
+      compress-json-to-gzip:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-compress-json-to-gzip
+        dependentTasks:
+        - aggregate-columns
+        inputs:
+          artifacts:
+            input_json:
+              taskOutputArtifact:
+                outputArtifactKey: output_json
+                producerTask: aggregate-columns
+        taskInfo:
+          name: compress-json-to-gzip
+      filtering:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-filtering
+        inputs:
+          parameters:
+            column_name:
+              runtimeValue:
+                constant: age
+            data_path:
+              runtimeValue:
+                constant: http://csv-reader-service.kubeflow.svc.cluster.local:5000/read_csv
+            operation:
+              runtimeValue:
+                constant: greater_than
+            threshold:
+              runtimeValue:
+                constant: 30.0
+        taskInfo:
+          name: filtering
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.9.0
