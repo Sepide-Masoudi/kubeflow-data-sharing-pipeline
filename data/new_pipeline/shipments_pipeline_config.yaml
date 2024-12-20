@@ -1,0 +1,57 @@
+deployment:
+  namespace: kubeflow
+  prometheusURL: http://localhost:9090
+stages:
+- name: filter_data
+  type: filtering
+  parameter:
+    operation: greater_than
+    column_name: week
+    threshold: 3
+- name: anonymize_columns
+  type: anonymization
+  parameter:
+    columns_to_anonymize:
+    - customer_name
+- name: aggregate_data
+  type: aggregation
+  parameter:
+    groupby_column: customer_id
+    columns_to_aggregate:
+    - item_id
+    aggregation_functions:
+      item_id:
+      - count
+- name: compress_json_to_output
+  type: compress_json_to_gzip
+  parameter: null
+- name: compress_csv_output
+  type: compress_csv_to_gzip
+  parameter: null
+pipelines:
+- name: auto_gen_pipeline_b5e81b9e-6e74-48e9-aa1a-4b5a66bf3109
+  flow:
+  - filter_data
+  consumers: null
+- name: auto_gen_pipeline_05ec9b5a-3eda-49e8-835e-fc25412e170a
+  flow:
+  - anonymize_columns
+  consumers:
+  - u1
+  - u2
+  - u2
+- name: auto_gen_pipeline_b6b47918-85a3-4060-95e2-821bf074333c
+  flow:
+  - aggregate_data
+  - compress_json_to_output
+  consumers: null
+pipelineChains:
+- name: shipments_anonymize_data_pipelines_00b3aef4-a0c9-41f9-9595-2e6484e603cb
+  flow:
+  - auto_gen_pipeline_b5e81b9e-6e74-48e9-aa1a-4b5a66bf3109
+  - auto_gen_pipeline_05ec9b5a-3eda-49e8-835e-fc25412e170a
+  - auto_gen_pipeline_b6b47918-85a3-4060-95e2-821bf074333c
+- name: shipments_data_pipelines_2fb7a6ed-45ce-42c7-8649-8e13ac1d3439
+  flow:
+  - auto_gen_pipeline_b5e81b9e-6e74-48e9-aa1a-4b5a66bf3109
+  - auto_gen_pipeline_b6b47918-85a3-4060-95e2-821bf074333c
