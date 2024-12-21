@@ -20,3 +20,8 @@ that is generated automatically and based on reusing the common process across d
 *  **Report dashboard**
 
 This module provide bar and pie plots that shows the energy consumption of the pipelines and each of their process.
+
+
+** Start working **
+
+First you need to upload your config file in the YAML format in \data path. There is already a test sample for experiment.
