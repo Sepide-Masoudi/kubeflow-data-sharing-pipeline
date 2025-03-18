@@ -1,27 +1,87 @@
-**PRE-share data** is a tool that aims to assist resource aware design decisions during development of a self-serve data platform.
+# PRE-share Data Tool
 
-This tool consist of three main modules:
+**PRE-share Data** is a tool designed to assist in making resource-aware design decisions during the development of a self-serve data platform. It provides a comprehensive suite of modules to generate, manage, and analyze data pipelines, with a focus on reusability and energy efficiency.
 
-1. Pipeline generator and management dashboard
-2. Reuse cong generator
-3. Report dashboard
+## Overview
 
+The tool consists of three main modules:
 
-* **Pipeline generator and management dashboard**
+1. **Pipeline Generator and Management Dashboard**
+2. **Reuse Configuration Generator**
+3. **Report Dashboard**
 
-This module will generate the pipelines, using kubeflow as platform, 
-based on the user configuration file, upload the pipelines and start running an experiment. 
+---
 
-* **Reuse cong generator**
+### 1. Pipeline Generator and Management Dashboard
 
-This module will auto generate an alternative recommended Configuration file,
-that is generated automatically and based on reusing the common process across different pipelines defined in the user config file.
+This module generates pipelines using **Kubeflow** as the platform, based on a user-provided configuration file. It also provides a dashboard to manage and monitor the pipelines.
 
-*  **Report dashboard**
+- **KubeflowPipelineGenerator**: Generates pipelines based on the configuration file.
+- **Management_Dashboard**: Runs experiments and checks the status of pipelines.
 
-This module provide bar and pie plots that shows the energy consumption of the pipelines and each of their process.
+---
 
+### 2. Reuse Configuration Generator
 
-** Start working **
+This module automatically generates an alternative recommended configuration file. It identifies and reuses common processes across different pipelines defined in the user's configuration file, optimizing resource usage.
 
-First you need to upload your config file in the YAML format in \data path. There is already a test sample for experiment.
+---
+
+### 3. Report Dashboard
+
+This module provides visualizations (bar and pie plots) to show the energy consumption of pipelines and their individual processes, helping users make informed decisions about resource allocation.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Ensure you have a configuration file in **YAML** format ready. A sample configuration file (`shipments_pipeline_config`) is provided in the `\data` path for testing purposes.
+
+### Steps to Run the Tool
+
+1. **Upload Configuration File**:
+   - Place your configuration file in the `\data` directory.
+   - Update the path in the `KubeflowPipelineGenerator` to point to your configuration file.
+   - If using a custom dataset, update the URL to your dataset.
+
+2. **Generate Pipelines**:
+   - Run the `main` method in the `KubeflowPipelineGenerator` to compile the pipelines.
+
+3. **Run Experiments**:
+   - Go to the `Management_Dashboard` and run a round of experiments.
+   - Use the provided function to check the status of your pipelines. Proceed once the status changes to **"SUCCESS"**.
+
+4. **Generate Reports**:
+   - Run the `main` function in the `Report_Dashboard` to generate energy consumption reports for your pipelines.
+
+5. **Reuse Configuration**:
+   - Run the code in the `ReuseConfigGenerator` to generate an alternative configuration file that optimizes pipeline reuse.
+   - Re-run your pipelines with the new configuration and measure the updated metrics.
+
+---
+
+## Extending the Tool
+
+You can extend the tool by adding support for additional operations as pipeline stages. To do this, add your custom functions to the `stages` function definitions cell in the `KubeflowPipelineGenerator`.
+
+---
+
+## Contributing
+
+We welcome contributions! If you'd like to contribute, please fork the repository and submit a pull request with your changes.
+
+---
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+## Contact
+
+For any questions or feedback, please reach out to sepideh.masoudi@tu-berlin.de or open an issue in the repository.
+
+---
