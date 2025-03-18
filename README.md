@@ -77,6 +77,7 @@ We welcome contributions! If you'd like to contribute, please fork the repositor
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This tool has been developed with IntelliJ IDEA.
 
 ---
 
