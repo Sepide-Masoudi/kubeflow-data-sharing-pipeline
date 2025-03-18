@@ -1,6 +1,7 @@
 # PRE-share Data Tool
 
 **PRE-share Data** is a tool designed to assist in making resource-aware design decisions during the development of a self-serve data platform. It provides a comprehensive suite of modules to generate, manage, and analyze data pipelines, with a focus on reusability and energy efficiency.
+This tool is an implementation of a poster paper accepted to the 22nd IEEE International Conference on Software Architecture Companion (ICSA-C) 2025. Please cite the paper if you use this tool.
 
 ## Overview
 
@@ -71,8 +72,7 @@ You can extend the tool by adding support for additional operations as pipeline 
 ## Contributing
 
 We welcome contributions! If you'd like to contribute, please fork the repository and submit a pull request with your changes.
-
----
+Please cite this paper (https://arxiv.org/abs/2503.13166) if you use this tool for your research.
 
 ## License
 
